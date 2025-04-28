@@ -4,8 +4,6 @@ from dotenv import load_dotenv
 from pyspark.sql.functions import col
 
 
-
-
 def generate_top_report(
     exploded_df,
     top_n,

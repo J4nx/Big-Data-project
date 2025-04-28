@@ -1,5 +1,6 @@
 from pyspark.sql.functions import col
 
+
 def get_top_domains(filtered_df, top_n):
     """
     Get the top 3 unique domains based on the priority from the exploded DataFrame.
