@@ -1,0 +1,7 @@
+shodan
+python-dotenv
+pyspark
+requests
+pymongo
+pandas
+openpyxl

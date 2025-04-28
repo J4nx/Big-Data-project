@@ -1,3 +1,17 @@
+# PySpark temporary files
+*.crc
+*.tmp
+*.temp
+
+# Python cache files
+*.pyc
+*.pyo
+*.pyd
+
+# Data files
+data/
+top_report.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
