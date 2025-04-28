@@ -19,7 +19,7 @@ This project analyzes potential vulnerabilities in Pulse Secure VPN devices by c
 
 ```
 Big_data_project/ 
-├── data/                       # Raw Shodan search results (JSON) 
+├── data/                       # Raw Shodan search results (JSON) - not committed
 ├── src/                        # Python source code 
 │ ├── analysis.py               # Spark-based data processing and vulnerability assessment 
 │ ├── data_loader.py            # Loading Shodan JSON data into Spark 
