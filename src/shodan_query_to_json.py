@@ -17,7 +17,7 @@ import shodan
 from dotenv import load_dotenv
 
 # Settings
-DEFAULT_QUERY = "product:Pulse Secure country:DE"
+DEFAULT_QUERY = "product:Pulse Secure country:FI"
 DATA_DIR = "data"
 
 # Load .env

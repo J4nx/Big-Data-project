@@ -1,11 +1,14 @@
 import pandas as pd
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from pyspark.sql.functions import col
+
+
 
 
 def generate_top_report(
-    filtered_df,
-    top_n=3,
+    exploded_df,
+    top_n,
     mongo_uri="mongodb://localhost:27017/",
     db_name="pulse_secure_db",
     collection_name="hunter_enrichment",
@@ -16,8 +19,8 @@ def generate_top_report(
     Generate a report of the Top N potentially vulnerable companies by merging Spark and MongoDB data.
     
     Args:
-        filtered_df: Spark DataFrame filtered for Pulse Secure targets.
-        top_n: Number of top domains to include in the report (default=3).
+        exploded_df: Spark DataFrame filtered for Pulse Secure targets.
+        top_n: Number of top domains to include in the report.
         mongo_uri: MongoDB URI.
         db_name: MongoDB database name.
         collection_name: MongoDB collection name.
@@ -27,9 +30,13 @@ def generate_top_report(
         Pandas DataFrame containing the final report.
     """
 
+    load_dotenv()
+    client = MongoClient(mongo_uri)
+    db = client[db_name]
+    collection = db[collection_name]
+
     # --- Select Top N ---
-    top_df = filtered_df.limit(top_n)
-    top_df = top_df.withColumn("domain", filtered_df["domains"].getItem(0))
+    top_df = exploded_df.orderBy(col("priority").asc()).limit(top_n)
 
     # Spark -> Pandas
     top_pandas = top_df.select(
@@ -46,11 +53,7 @@ def generate_top_report(
         return None
 
     # --- Fetch Hunter.io enrichment data from MongoDB ---
-    load_dotenv()
-    client = MongoClient(mongo_uri)
-    db = client[db_name]
-    collection = db[collection_name]
-
+    
     hunter_data = list(collection.find({"domain": {"$in": top_pandas["domain"].tolist()}}))
     hunter_pandas = pd.DataFrame(hunter_data)
 
@@ -62,27 +65,22 @@ def generate_top_report(
     merged = top_pandas.merge(hunter_pandas, on="domain", how="left")
 
     # --- Build the final report ---
-    final_report = merged[[
-        "org",             # Organization
-        "product",         # Product
-        "version",         # Version
-        "site",            # Emails (Hunter)
-        "location",        # Location (Hunter)
-        "employees",       # Employee count (Hunter)
-        "timestamp_x",     # Shodan timestamp
-        "timestamp_y"      # Hunter timestamp
-    ]]
+    final_report = merged.rename(columns={
+        "ip_str": "IP",
+        "org": "Company",
+        "product": "Product",
+        "version": "Version",
+        "site": "Emails",
+        "location": "Location",
+        "employees": "EmployeeCount",
+        "timestamp_x": "ShodanScanDate",
+        "timestamp_y": "HunterScanDate",
+        "domain": "Domain"
+    })
 
-    final_report.columns = [
-        "Company",
-        "Product",
-        "Version",
-        "Emails",
-        "Location",
-        "EmployeeCount",
-        "ShodanScanDate",
-        "HunterScanDate"
-    ]
+    final_report = final_report[[
+        "IP", "Company", "Product", "Version", "Emails", "Location", "EmployeeCount", "ShodanScanDate", "HunterScanDate", "Domain"
+    ]]
 
     # Format email addresses
     final_report.loc[:, "Emails"] = final_report["Emails"].apply(
