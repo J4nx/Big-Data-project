@@ -60,7 +60,7 @@ pip install -r requirements.txt
 
 ## Environment Setup
 
-Create a `.env` file in the project root with the following contents:
+Modify a `.env` file in the project root with the following contents:
 
 ```dotenv
 SHODAN_API_KEY=your_shodan_api_key
